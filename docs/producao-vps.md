@@ -6,6 +6,7 @@ Este projeto pode rodar na sua VPS atual usando Docker Swarm e Traefik.
 
 - `calcados_catalogo`: app Node que serve catalogo, revisao, vendedor robo e pedidos.
 - Volume `calcados_catalogo_data`: guarda produtos importados, imagens, pedidos e publicacoes.
+- Rede Docker externa: `managerNet`, a mesma usada pelo Traefik.
 
 ## Rotas publicas
 
