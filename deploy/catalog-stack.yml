@@ -5,6 +5,8 @@ services:
     image: ${CATALOGO_IMAGE:-ghcr.io/misterbatatadev-pixel/calcados-catalogo:latest}
     environment:
       PORT: "4174"
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       # Opcional: habilita analise visual de cores durante importacoes futuras.
       # OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:

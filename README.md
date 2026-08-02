@@ -60,6 +60,16 @@ O prompt usado fica em `config/color-analysis-prompt.md`.
 
 A cor detectada e apenas uma ajuda para filtro. A foto real continua sendo a confirmacao principal para o cliente.
 
+## Protecao interna
+
+Defina usuario e senha para proteger revisao, pedidos e vendedor interno:
+
+```powershell
+$env:ADMIN_USER="admin"
+$env:ADMIN_PASSWORD="uma-senha-forte"
+npm run serve
+```
+
 ## VPS
 
 Arquivos iniciais para Docker Swarm/Traefik:

@@ -19,6 +19,24 @@ Exemplo com `CATALOGO_HOST=catalogo.eliteagents.com.br`:
 
 Antes de usar com clientes, a tela de revisao, pedidos e vendedor interno deve ter protecao por login/senha.
 
+## Protecao da area interna
+
+Configure na stack:
+
+```text
+ADMIN_USER=admin
+ADMIN_PASSWORD=uma-senha-forte
+```
+
+Com isso, estas rotas exigem usuario e senha:
+
+- `/review.html`
+- `/orders.html`
+- `/seller.html`
+- APIs internas de revisao e pedidos
+
+O catalogo publico `/` continua aberto para clientes.
+
 ## Deploy sugerido
 
 1. Criar um subdominio, por exemplo `catalogo.seudominio.com.br`, apontando para a VPS.

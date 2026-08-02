@@ -10,12 +10,18 @@ const dataDir = path.join(rootDir, "data");
 const publicationStatePath = path.join(dataDir, "publication-state.json");
 const ordersPath = path.join(dataDir, "orders.json");
 const port = Number(process.env.PORT ?? 4174);
+const adminUser = process.env.ADMIN_USER ?? "";
+const adminPassword = process.env.ADMIN_PASSWORD ?? "";
 
 const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url ?? "/", `http://localhost:${port}`);
     if (url.pathname === "/health") {
       writeJson(response, { ok: true });
+      return;
+    }
+    if (requiresAuth(url.pathname, request.method) && !isAuthorized(request)) {
+      requestAuth(response);
       return;
     }
     if (url.pathname === "/publication-state") {
@@ -53,6 +59,42 @@ function resolveRequest(pathname) {
   if (pathname === "/products.json") return path.join(dataDir, "products.json");
   if (pathname.startsWith("/images/")) return path.join(dataDir, pathname);
   return path.join(publicDir, pathname);
+}
+
+function requiresAuth(pathname, method = "GET") {
+  const protectedPages = new Set(["/review.html", "/orders.html", "/seller.html"]);
+  if (protectedPages.has(pathname)) return true;
+  if (pathname === "/products" && method !== "GET") return true;
+  if (pathname === "/publication-state" && method !== "GET") return true;
+  if (pathname === "/orders" && method !== "POST") return true;
+  return false;
+}
+
+function isAuthorized(request) {
+  if (!adminUser || !adminPassword) return false;
+
+  const header = request.headers.authorization ?? "";
+  if (!header.startsWith("Basic ")) return false;
+
+  try {
+    const decoded = Buffer.from(header.slice("Basic ".length), "base64").toString("utf8");
+    const separator = decoded.indexOf(":");
+    if (separator === -1) return false;
+
+    const user = decoded.slice(0, separator);
+    const password = decoded.slice(separator + 1);
+    return user === adminUser && password === adminPassword;
+  } catch {
+    return false;
+  }
+}
+
+function requestAuth(response) {
+  response.writeHead(401, {
+    "Content-Type": "text/plain; charset=utf-8",
+    "WWW-Authenticate": 'Basic realm="Area interna do catalogo"',
+  });
+  response.end("Acesso interno protegido");
 }
 
 async function handleProducts(request, response) {
