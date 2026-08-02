@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Catalogo de Calcados</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Vitrine de Calcados</h1>
+        <p id="summary">Carregando produtos...</p>
+      </div>
+      <div class="filters">
+        <a class="nav-link" href="/seller.html">Vendedor robo</a>
+        <a class="nav-link" href="/orders.html">Pedidos</a>
+        <a class="nav-link" href="/review.html">Revisao</a>
+        <input id="search" type="search" placeholder="Buscar por cor, tamanho ou codigo" />
+        <select id="size">
+          <option value="">Todos os tamanhos</option>
+        </select>
+        <select id="color">
+          <option value="">Todas as cores</option>
+        </select>
+      </div>
+    </header>
+
+    <main>
+      <section id="grid" class="grid"></section>
+    </main>
+
+    <dialog id="order-dialog" class="order-dialog">
+      <form id="order-form" method="dialog">
+        <div class="order-head">
+          <div>
+            <h2>Confirmar pedido</h2>
+            <p id="order-summary"></p>
+          </div>
+          <button class="icon-button" value="cancel" type="submit">x</button>
+        </div>
+        <img id="order-image" alt="" />
+        <label>
+          Seu nome
+          <input id="customer-name" type="text" placeholder="Digite seu nome" />
+        </label>
+        <label>
+          Como prefere receber?
+          <select id="delivery-mode">
+            <option value="Retirada">Retirada</option>
+            <option value="Entrega">Entrega</option>
+          </select>
+        </label>
+        <label>
+          Forma de pagamento
+          <select id="payment-mode">
+            <option value="Pagar na entrega/retirada">Pagar na entrega/retirada</option>
+            <option value="Pix antecipado">Pix antecipado</option>
+            <option value="Cartao/link de pagamento">Cartao/link de pagamento</option>
+          </select>
+        </label>
+        <label>
+          Observacao
+          <input id="order-note" type="text" placeholder="Ex.: quero confirmar disponibilidade" />
+        </label>
+        <a id="send-order" class="send-order" target="_blank" rel="noreferrer">Enviar pedido no WhatsApp</a>
+      </form>
+    </dialog>
+
+    <script src="/app.js?v=4"></script>
+  </body>
+</html>

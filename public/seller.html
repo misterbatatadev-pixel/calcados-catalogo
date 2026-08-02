@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vendedor Robo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Vendedor robo</h1>
+        <p id="seller-summary">Carregando atendimento...</p>
+      </div>
+      <div class="filters">
+        <a class="nav-link" href="/">Catalogo</a>
+        <a class="nav-link" href="/orders.html">Pedidos</a>
+        <a class="nav-link" href="/review.html">Revisao</a>
+      </div>
+    </header>
+
+    <main class="seller-shell">
+      <aside class="seller-panel">
+        <h2>Dados do atendimento</h2>
+        <label>
+          Nome do cliente
+          <input id="seller-customer-name" type="text" placeholder="Ex.: Mayara" />
+        </label>
+        <label>
+          Recebimento
+          <select id="seller-delivery-mode">
+            <option value="Retirada">Retirada</option>
+            <option value="Entrega">Entrega</option>
+          </select>
+        </label>
+        <label>
+          Pagamento
+          <select id="seller-payment-mode">
+            <option value="Pagar na entrega/retirada">Pagar na entrega/retirada</option>
+            <option value="Pix antecipado">Pix antecipado</option>
+            <option value="Cartao/link de pagamento">Cartao/link de pagamento</option>
+          </select>
+        </label>
+        <label>
+          Observacao
+          <input id="seller-note" type="text" placeholder="Ex.: cliente quer retirar hoje" />
+        </label>
+      </aside>
+
+      <section class="chat-surface" aria-label="Simulador do vendedor robo">
+        <div id="chat-log" class="chat-log"></div>
+        <div id="quick-prompts" class="quick-prompts"></div>
+        <form id="chat-form" class="chat-form">
+          <input id="chat-input" type="text" placeholder="Digite como se fosse o cliente: quero preto tamanho 39" autocomplete="off" />
+          <button type="submit">Enviar</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="/seller.js?v=1"></script>
+  </body>
+</html>

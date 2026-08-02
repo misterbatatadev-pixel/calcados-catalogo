@@ -1,0 +1,6 @@
+node_modules/
+data/images/
+data/products.json
+data/import-report.json
+data/orders.json
+.env

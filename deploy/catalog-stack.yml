@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  calcados_catalogo:
+    image: ${CATALOGO_IMAGE:-ghcr.io/SEU_USUARIO/SEU_REPOSITORIO:latest}
+    environment:
+      PORT: "4174"
+      # Opcional: habilita analise visual de cores durante importacoes futuras.
+      # OPENAI_API_KEY: ${OPENAI_API_KEY}
+    volumes:
+      - calcados_catalogo_data:/app/data
+    networks:
+      - traefik_public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik_public
+        - traefik.http.routers.calcados-catalogo.rule=Host(`${CATALOGO_HOST}`)
+        - traefik.http.routers.calcados-catalogo.entrypoints=websecure
+        - traefik.http.routers.calcados-catalogo.tls.certresolver=letsencrypt
+        - traefik.http.services.calcados-catalogo.loadbalancer.server.port=4174
+
+volumes:
+  calcados_catalogo_data:
+
+networks:
+  traefik_public:
+    external: true
