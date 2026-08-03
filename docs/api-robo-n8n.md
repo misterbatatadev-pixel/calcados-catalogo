@@ -49,14 +49,16 @@ Resposta:
       "colors": ["preto", "cinza", "branco"],
       "sizes": [{"size": "39", "quantity": 1}],
       "imageUrl": "/images/4440-0001.jpg",
-      "absoluteImageUrl": "https://catalogo.eliteagents.com.br/images/4440-0001.jpg"
+      "absoluteImageUrl": "https://catalogo.eliteagents.com.br/images/4440-0001.jpg",
+      "sourceImageUrl": "https://lh3.googleusercontent.com/...",
+      "whatsappImageUrl": "https://lh3.googleusercontent.com/..."
     }
   ],
   "reply": "Texto pronto para responder ao cliente"
 }
 ```
 
-Use `absoluteImageUrl` para enviar a foto pela Evolution API.
+Use `whatsappImageUrl` para enviar a foto pela Evolution API. Ele prioriza a URL original da imagem quando existir.
 
 ## Criar pedido
 

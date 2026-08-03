@@ -363,6 +363,9 @@ function scoreProduct(product, intent) {
 }
 
 function publicProduct(product) {
+  const catalogImageUrl = product.localImage ? `https://${process.env.CATALOGO_HOST ?? "catalogo.eliteagents.com.br"}/images/${path.basename(product.localImage)}` : "";
+  const sourceImageUrl = text(product.imageUrl);
+
   return {
     productKey: productKey(product),
     code: product.code ?? product.id ?? "",
@@ -371,7 +374,9 @@ function publicProduct(product) {
     colors: product.colors ?? [],
     sizes: product.sizes ?? [],
     imageUrl: product.localImage ? `/images/${path.basename(product.localImage)}` : "",
-    absoluteImageUrl: product.localImage ? `https://${process.env.CATALOGO_HOST ?? "catalogo.eliteagents.com.br"}/images/${path.basename(product.localImage)}` : "",
+    absoluteImageUrl: catalogImageUrl,
+    sourceImageUrl,
+    whatsappImageUrl: sourceImageUrl || catalogImageUrl,
   };
 }
 

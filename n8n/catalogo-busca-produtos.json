@@ -87,7 +87,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst products = data.products ?? [];\n\nreturn [{\n  json: {\n    resposta: data.reply,\n    totalEncontrado: data.count,\n    primeiroProduto: products[0] ?? null,\n    foto1: products[0]?.absoluteImageUrl ?? '',\n    productKey1: products[0]?.productKey ?? '',\n    codigo1: products[0]?.code ?? '',\n    preco1: products[0]?.priceText ?? '',\n    tamanhos1: (products[0]?.sizes ?? []).map((item) => `${item.size} (${item.quantity})`).join(', '),\n    textoParaCliente: products.length\n      ? `${data.reply}\\n\\nFoto: ${products[0].absoluteImageUrl}\\nPara pedir, diga: quero o tamanho desejado.`\n      : data.reply,\n    produtos: products,\n  },\n}];"
+        "jsCode": "const data = $input.first().json;\nconst products = data.products ?? [];\nconst image = products[0]?.whatsappImageUrl ?? products[0]?.absoluteImageUrl ?? '';\n\nreturn [{\n  json: {\n    resposta: data.reply,\n    totalEncontrado: data.count,\n    primeiroProduto: products[0] ?? null,\n    foto1: image,\n    productKey1: products[0]?.productKey ?? '',\n    codigo1: products[0]?.code ?? '',\n    preco1: products[0]?.priceText ?? '',\n    tamanhos1: (products[0]?.sizes ?? []).map((item) => `${item.size} (${item.quantity})`).join(', '),\n    textoParaCliente: products.length\n      ? `${data.reply}\\n\\nFoto: ${image}\\nPara pedir, diga: quero o tamanho desejado.`\n      : data.reply,\n    produtos: products,\n  },\n}];"
       },
       "id": "formatar-resposta",
       "name": "Formatar resposta do robo",
