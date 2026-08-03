@@ -1,0 +1,144 @@
+{
+  "name": "Catalogo Calcados - Teste busca produtos",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Executar teste manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "message",
+              "name": "message",
+              "value": "quero tenis preto tamanho 39",
+              "type": "string"
+            },
+            {
+              "id": "limit",
+              "name": "limit",
+              "value": 3,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dados-do-cliente",
+      "name": "Mensagem de teste",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://catalogo.eliteagents.com.br/api/bot/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Bot-Token",
+              "value": "COLE_SEU_BOT_TOKEN_AQUI"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "limit",
+              "value": "={{ $json.limit }}"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "buscar-produtos",
+      "name": "Buscar produtos no catalogo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst products = data.products ?? [];\n\nreturn [{\n  json: {\n    resposta: data.reply,\n    totalEncontrado: data.count,\n    primeiroProduto: products[0] ?? null,\n    foto1: products[0]?.absoluteImageUrl ?? '',\n    productKey1: products[0]?.productKey ?? '',\n    codigo1: products[0]?.code ?? '',\n    preco1: products[0]?.priceText ?? '',\n    tamanhos1: (products[0]?.sizes ?? []).map((item) => `${item.size} (${item.quantity})`).join(', '),\n    textoParaCliente: products.length\n      ? `${data.reply}\\n\\nFoto: ${products[0].absoluteImageUrl}\\nPara pedir, diga: quero o tamanho desejado.`\n      : data.reply,\n    produtos: products,\n  },\n}];"
+      },
+      "id": "formatar-resposta",
+      "name": "Formatar resposta do robo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Executar teste manual": {
+      "main": [
+        [
+          {
+            "node": "Mensagem de teste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem de teste": {
+      "main": [
+        [
+          {
+            "node": "Buscar produtos no catalogo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar produtos no catalogo": {
+      "main": [
+        [
+          {
+            "node": "Formatar resposta do robo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

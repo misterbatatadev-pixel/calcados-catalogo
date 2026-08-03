@@ -1,0 +1,347 @@
+{
+  "name": "WhatsApp - Robo vendedor calcados basico",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "calcados-robo-vendedor",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-evolution",
+      "name": "Webhook Evolution",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        320
+      ],
+      "webhookId": "calcados-robo-vendedor"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\nconst data = body.data ?? body;\nconst message = data.message ?? data;\nconst key = data.key ?? message.key ?? {};\n\nconst remoteJid = key.remoteJid ?? data.remoteJid ?? body.remoteJid ?? '';\nconst number = String(remoteJid || data.from || body.from || '').replace(/@.*/, '').replace(/\\D/g, '');\nconst text = message.conversation\n  ?? message.extendedTextMessage?.text\n  ?? data.text\n  ?? body.text\n  ?? body.message\n  ?? '';\n\nreturn [{\n  json: {\n    raw: body,\n    number,\n    message: String(text).trim(),\n    isFromMe: Boolean(key.fromMe),\n  },\n}];"
+      },
+      "id": "normalizar-mensagem",
+      "name": "Normalizar mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        430,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "tem-texto",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "nao-eu",
+              "leftValue": "={{ $json.isFromMe }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "mensagem-valida",
+      "name": "Mensagem valida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://catalogo.eliteagents.com.br/api/bot/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Bot-Token",
+              "value": "COLE_SEU_BOT_TOKEN_AQUI"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "limit",
+              "value": 3
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "buscar-catalogo",
+      "name": "Buscar no catalogo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const search = $input.first().json;\nconst previous = $('Normalizar mensagem').first().json;\nconst products = search.products ?? [];\nconst first = products[0] ?? {};\nconst sizeList = (first.sizes ?? []).map((item) => `${item.size} (${item.quantity} un.)`).join(', ');\n\nlet text = search.reply;\nif (products.length) {\n  text += `\\n\\nTenho essa primeira opcao para voce:`;\n  text += `\\nCOD ${first.code} - ${first.priceText}`;\n  text += `\\nTamanhos: ${sizeList}`;\n  text += `\\n\\nSe quiser comprar, responda: quero o tamanho 39`;\n}\n\nreturn [{\n  json: {\n    number: previous.number,\n    customerMessage: previous.message,\n    text,\n    image: first.absoluteImageUrl ?? '',\n    productKey: first.productKey ?? '',\n    code: first.code ?? '',\n    products,\n  },\n}];"
+      },
+      "id": "preparar-resposta",
+      "name": "Preparar resposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://evoapimanager.eliteagents.com.br/message/sendText/COLE_NOME_DA_INSTANCIA",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "COLE_APIKEY_DA_EVOLUTION_AQUI"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $json.number }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "enviar-texto-evolution",
+      "name": "Enviar texto Evolution",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1390,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://evoapimanager.eliteagents.com.br/message/sendMedia/COLE_NOME_DA_INSTANCIA",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "COLE_APIKEY_DA_EVOLUTION_AQUI"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $json.number }}"
+            },
+            {
+              "name": "mediatype",
+              "value": "image"
+            },
+            {
+              "name": "media",
+              "value": "={{ $json.image }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $json.code ? 'Foto do COD ' + $json.code : 'Foto do produto' }}"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "enviar-foto-evolution",
+      "name": "Enviar foto Evolution",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1390,
+        330
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true }",
+        "options": {}
+      },
+      "id": "responder-webhook",
+      "name": "Responder webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1630,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"ignored\": true }",
+        "options": {}
+      },
+      "id": "ignorar",
+      "name": "Ignorar",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        470
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Evolution": {
+      "main": [
+        [
+          {
+            "node": "Normalizar mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar mensagem": {
+      "main": [
+        [
+          {
+            "node": "Mensagem valida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem valida?": {
+      "main": [
+        [
+          {
+            "node": "Buscar no catalogo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ignorar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar no catalogo": {
+      "main": [
+        [
+          {
+            "node": "Preparar resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar resposta": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto Evolution",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar foto Evolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar texto Evolution": {
+      "main": [
+        [
+          {
+            "node": "Responder webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
