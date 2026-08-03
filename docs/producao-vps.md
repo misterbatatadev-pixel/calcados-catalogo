@@ -68,3 +68,5 @@ Para conversar pelo WhatsApp sem o cliente abrir o catalogo, o fluxo ideal usand
 - Criar endpoint de pedido para o n8n chamar.
 - Configurar webhook da Evolution API para o n8n.
 - Criar workflow no n8n para atendimento, audio e envio de imagem.
+
+Os endpoints iniciais ja existem em `docs/api-robo-n8n.md`.

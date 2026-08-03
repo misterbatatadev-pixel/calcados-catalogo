@@ -12,6 +12,7 @@ const ordersPath = path.join(dataDir, "orders.json");
 const port = Number(process.env.PORT ?? 4174);
 const adminUser = process.env.ADMIN_USER ?? "";
 const adminPassword = process.env.ADMIN_PASSWORD ?? "";
+const botToken = process.env.BOT_TOKEN ?? "";
 
 const server = http.createServer(async (request, response) => {
   try {
@@ -22,6 +23,19 @@ const server = http.createServer(async (request, response) => {
     }
     if (requiresAuth(url.pathname, request.method) && !isAuthorized(request)) {
       requestAuth(response);
+      return;
+    }
+    if (url.pathname.startsWith("/api/bot/") && !isBotAuthorized(request)) {
+      response.writeHead(401, { "Content-Type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ error: "Token do robo invalido" }));
+      return;
+    }
+    if (url.pathname === "/api/bot/search") {
+      await handleBotSearch(request, response);
+      return;
+    }
+    if (url.pathname === "/api/bot/orders") {
+      await handleBotOrders(request, response);
       return;
     }
     if (url.pathname === "/publication-state") {
@@ -97,11 +111,92 @@ function requestAuth(response) {
   response.end("Acesso interno protegido");
 }
 
+function isBotAuthorized(request) {
+  if (!botToken) return false;
+  return request.headers["x-bot-token"] === botToken;
+}
+
+async function handleBotSearch(request, response) {
+  if (request.method !== "POST") {
+    response.writeHead(405, { "Content-Type": "application/json; charset=utf-8" });
+    response.end(JSON.stringify({ error: "Metodo nao permitido" }));
+    return;
+  }
+
+  const body = JSON.parse((await readRequestBody(request)) || "{}");
+  const intent = parseSearchIntent(text(body.message), body);
+  const products = await readProducts();
+  const publicationState = await readPublicationState();
+  const published = products.filter((product) => publicationState.approved[productKey(product)]);
+  const matches = findProducts(published, intent).slice(0, Number(body.limit ?? 5));
+
+  writeJson(response, {
+    intent,
+    count: matches.length,
+    products: matches.map(publicProduct),
+    reply: buildSearchReply(intent, matches),
+  });
+}
+
+async function handleBotOrders(request, response) {
+  if (request.method !== "POST") {
+    response.writeHead(405, { "Content-Type": "application/json; charset=utf-8" });
+    response.end(JSON.stringify({ error: "Metodo nao permitido" }));
+    return;
+  }
+
+  const body = JSON.parse((await readRequestBody(request)) || "{}");
+  const products = await readProducts();
+  const product = products.find((item) => productKey(item) === text(body.productKey))
+    ?? products.find((item) => String(item.code ?? item.id) === text(body.code));
+
+  if (!product) {
+    response.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
+    response.end(JSON.stringify({ error: "Produto nao encontrado" }));
+    return;
+  }
+
+  const requestedSize = text(body.size);
+  const sizeItem = (product.sizes ?? []).find((item) => item.size === requestedSize && item.quantity > 0);
+  if (!sizeItem) {
+    response.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+    response.end(JSON.stringify({ error: "Tamanho indisponivel" }));
+    return;
+  }
+
+  const order = normalizeOrder({
+    productKey: productKey(product),
+    code: product.code ?? product.id ?? "",
+    boxLocation: product.boxLocation ?? product.note ?? "",
+    size: requestedSize,
+    priceText: product.priceText ?? "",
+    image: product.localImage ?? "",
+    customerName: text(body.customerName),
+    customerPhone: text(body.customerPhone),
+    deliveryMode: text(body.deliveryMode) || "Retirada",
+    paymentMode: text(body.paymentMode) || "Pagar na entrega/retirada",
+    note: text(body.note) || "Pedido criado pelo robo do WhatsApp",
+    whatsappText: buildWhatsappText(product, {
+      size: requestedSize,
+      customerName: text(body.customerName),
+      deliveryMode: text(body.deliveryMode) || "Retirada",
+      paymentMode: text(body.paymentMode) || "Pagar na entrega/retirada",
+      note: text(body.note),
+      customerPhone: text(body.customerPhone),
+    }),
+  });
+
+  const orders = await readOrders();
+  orders.unshift(order);
+  await saveOrders(orders);
+  writeJson(response, { order, reply: `Pedido registrado: COD ${order.code}, tamanho ${order.size}.` });
+}
+
 async function handleProducts(request, response) {
   const productsPath = path.join(dataDir, "products.json");
 
   if (request.method === "GET") {
-    writeJson(response, JSON.parse(await fs.readFile(productsPath, "utf8")));
+    writeJson(response, await readProducts());
     return;
   }
 
@@ -121,6 +216,16 @@ async function handleProducts(request, response) {
 
   response.writeHead(405, { "Content-Type": "text/plain; charset=utf-8" });
   response.end("Metodo nao permitido");
+}
+
+async function readProducts() {
+  const productsPath = path.join(dataDir, "products.json");
+  try {
+    const products = JSON.parse(await fs.readFile(productsPath, "utf8"));
+    return Array.isArray(products) ? products : [];
+  } catch {
+    return [];
+  }
 }
 
 async function handlePublicationState(request, response) {
@@ -214,6 +319,7 @@ function normalizeOrder(order) {
     priceText: text(order.priceText),
     image: text(order.image),
     customerName: text(order.customerName),
+    customerPhone: text(order.customerPhone),
     deliveryMode: text(order.deliveryMode) || "Retirada",
     paymentMode,
     note: text(order.note),
@@ -221,6 +327,84 @@ function normalizeOrder(order) {
     whatsappText: text(order.whatsappText),
     status: text(order.status) || fallbackStatus,
   };
+}
+
+function parseSearchIntent(message, body = {}) {
+  const normalized = message.toLowerCase();
+  const colorWords = ["preto", "branco", "cinza", "azul", "vermelho", "rosa", "verde", "amarelo", "bege", "marrom", "lilas", "roxo"];
+  const sizes = [...normalized.matchAll(/\b(3[3-9]|4[0-6])\b/g)].map((match) => match[1]);
+  const codeMatch = normalized.match(/(?:cod|codigo|c[oó]digo)\s*[:#-]?\s*(\d+)/) ?? normalized.match(/\b(4\d{3}|5\d{3})\b/);
+
+  return {
+    message,
+    size: text(body.size) || sizes[0] || "",
+    colors: Array.isArray(body.colors) && body.colors.length ? body.colors.map(text).filter(Boolean) : colorWords.filter((color) => normalized.includes(color)),
+    code: text(body.code) || codeMatch?.[1] || "",
+  };
+}
+
+function findProducts(products, intent) {
+  return products
+    .filter((product) => {
+      if (intent.code && String(product.code ?? product.id) !== intent.code) return false;
+      if (intent.size && !(product.sizes ?? []).some((item) => item.size === intent.size && item.quantity > 0)) return false;
+      if (intent.colors.length && !intent.colors.some((color) => (product.colors ?? []).includes(color))) return false;
+      return true;
+    })
+    .sort((a, b) => scoreProduct(b, intent) - scoreProduct(a, intent));
+}
+
+function scoreProduct(product, intent) {
+  let score = 0;
+  if (intent.code && String(product.code ?? product.id) === intent.code) score += 4;
+  if (intent.size && (product.sizes ?? []).some((item) => item.size === intent.size && item.quantity > 0)) score += 3;
+  score += intent.colors.filter((color) => (product.colors ?? []).includes(color)).length * 2;
+  return score;
+}
+
+function publicProduct(product) {
+  return {
+    productKey: productKey(product),
+    code: product.code ?? product.id ?? "",
+    priceText: product.priceText ?? "",
+    boxLocation: product.boxLocation ?? product.note ?? "",
+    colors: product.colors ?? [],
+    sizes: product.sizes ?? [],
+    imageUrl: product.localImage ? `/images/${path.basename(product.localImage)}` : "",
+    absoluteImageUrl: product.localImage ? `https://${process.env.CATALOGO_HOST ?? "catalogo.eliteagents.com.br"}/images/${path.basename(product.localImage)}` : "",
+  };
+}
+
+function productKey(product) {
+  return [product.position, product.code ?? product.id ?? "sem-codigo", product.boxLocation ?? product.note ?? "sem-caixa"].join("|");
+}
+
+function buildSearchReply(intent, matches) {
+  if (!matches.length) {
+    return "Nao encontrei esse modelo disponivel agora. Posso procurar outra cor ou tamanho para voce?";
+  }
+
+  const first = matches[0];
+  const sizes = (first.sizes ?? []).filter((item) => item.quantity > 0).map((item) => item.size).join(", ");
+  return `Encontrei ${matches.length} opcao(oes). Primeira opcao: COD ${first.code ?? first.id}, ${first.priceText ?? ""}. Tamanhos disponiveis: ${sizes}.`;
+}
+
+function buildWhatsappText(product, order) {
+  return [
+    "Ola, quero fazer um pedido.",
+    "",
+    `Produto: COD ${product.code ?? product.id}`,
+    `Tamanho: ${order.size}`,
+    `Preco: ${product.priceText ?? ""}`,
+    `Caixa/estoque: ${product.boxLocation ?? product.note ?? "nao informada"}`,
+    `Forma: ${order.deliveryMode}`,
+    `Pagamento: ${order.paymentMode}`,
+    order.customerName ? `Nome: ${order.customerName}` : "",
+    order.customerPhone ? `Telefone: ${order.customerPhone}` : "",
+    order.note ? `Obs: ${order.note}` : "",
+    "",
+    "Pode confirmar disponibilidade e proximo passo para pagamento?",
+  ].filter(Boolean).join("\n");
 }
 
 function text(value) {

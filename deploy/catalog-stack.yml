@@ -7,6 +7,8 @@ services:
       PORT: "4174"
       ADMIN_USER: ${ADMIN_USER}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      BOT_TOKEN: ${BOT_TOKEN}
+      CATALOGO_HOST: ${CATALOGO_HOST}
       # Opcional: habilita analise visual de cores durante importacoes futuras.
       # OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:
