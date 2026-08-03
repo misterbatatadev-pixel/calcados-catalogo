@@ -156,7 +156,7 @@
               "value": "={{ $json.number }}"
             },
             {
-              "name": "textMessage.text",
+              "name": "text",
               "value": "={{ $json.text }}"
             }
           ]
