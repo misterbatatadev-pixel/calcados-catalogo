@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "calcados-robo-vendedor",
-        "responseMode": "lastNode",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "webhook-evolution",
