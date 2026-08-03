@@ -10,10 +10,25 @@ n8n/whatsapp-robo-vendedor-basico.json
 
 1. Recebe mensagem da Evolution API em um Webhook do n8n.
 2. Extrai telefone e texto do cliente.
-3. Consulta `POST /api/bot/search` no catalogo.
-4. Prepara uma resposta com codigo, preco, tamanhos e foto.
-5. Chama a Evolution API para enviar texto.
-6. Chama a Evolution API para enviar a primeira foto.
+3. Ignora mensagens enviadas por voce, grupos e numeros fora da lista de teste.
+4. Consulta `POST /api/bot/search` no catalogo.
+5. Prepara uma resposta com codigo, preco, tamanhos e foto.
+6. Chama a Evolution API para enviar texto.
+7. Chama a Evolution API para enviar a primeira foto.
+
+## Lista de numeros permitidos
+
+No node `Normalizar mensagem`, ajuste:
+
+```js
+const allowedNumbers = ['5591983856273'];
+```
+
+Enquanto estiver testando, deixe apenas seus numeros. Para liberar mais contatos, adicione:
+
+```js
+const allowedNumbers = ['5591983856273', '55OUTRONUMERO'];
+```
 
 ## Campos para trocar depois de importar
 

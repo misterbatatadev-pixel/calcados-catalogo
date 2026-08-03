@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\nconst data = body.data ?? body;\nconst message = data.message ?? data;\nconst key = data.key ?? message.key ?? {};\n\nconst remoteJid = key.remoteJid ?? data.remoteJid ?? body.remoteJid ?? '';\nconst number = String(remoteJid || data.from || body.from || '').replace(/@.*/, '').replace(/\\D/g, '');\nconst text = message.conversation\n  ?? message.extendedTextMessage?.text\n  ?? data.text\n  ?? body.text\n  ?? body.message\n  ?? '';\n\nreturn [{\n  json: {\n    raw: body,\n    number,\n    message: String(text).trim(),\n    isFromMe: Boolean(key.fromMe),\n  },\n}];"
+        "jsCode": "const allowedNumbers = ['5591983856273'];\nconst body = $input.first().json.body ?? $input.first().json;\nconst data = body.data ?? body;\nconst message = data.message ?? data;\nconst key = data.key ?? message.key ?? {};\n\nconst remoteJid = key.remoteJid ?? data.remoteJid ?? body.remoteJid ?? '';\nconst number = String(remoteJid || data.from || body.from || '').replace(/@.*/, '').replace(/\\D/g, '');\nconst text = message.conversation\n  ?? message.extendedTextMessage?.text\n  ?? data.text\n  ?? body.text\n  ?? body.message\n  ?? '';\nconst isGroup = String(remoteJid).includes('@g.us');\n\nreturn [{\n  json: {\n    raw: body,\n    number,\n    message: String(text).trim(),\n    isFromMe: Boolean(key.fromMe),\n    isGroup,\n    isAllowed: allowedNumbers.includes(number),\n  },\n}];"
       },
       "id": "normalizar-mensagem",
       "name": "Normalizar mensagem",
@@ -54,6 +54,24 @@
               "id": "nao-eu",
               "leftValue": "={{ $json.isFromMe }}",
               "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "nao-grupo",
+              "leftValue": "={{ $json.isGroup }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "numero-permitido",
+              "leftValue": "={{ $json.isAllowed }}",
+              "rightValue": true,
               "operator": {
                 "type": "boolean",
                 "operation": "equals"
