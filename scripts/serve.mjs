@@ -331,7 +331,7 @@ function normalizeOrder(order) {
 
 function parseSearchIntent(message, body = {}) {
   const normalized = message.toLowerCase();
-  const colorWords = ["preto", "branco", "cinza", "azul", "vermelho", "rosa", "verde", "amarelo", "bege", "marrom", "lilas", "roxo"];
+  const colorWords = ["preto", "branco", "cinza", "azul", "vermelho", "rosa", "laranja", "verde", "amarelo", "bege", "marrom", "lilas", "roxo"];
   const sizes = [...normalized.matchAll(/\b(3[3-9]|4[0-6])\b/g)].map((match) => match[1]);
   const codeMatch = normalized.match(/(?:cod|codigo|c[oó]digo)\s*[:#-]?\s*(\d+)/) ?? normalized.match(/\b(4\d{3}|5\d{3})\b/);
 

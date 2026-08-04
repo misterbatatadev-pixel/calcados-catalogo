@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "import": "node scripts/import-google-photos.mjs",
+    "reanalyze-colors": "node scripts/reanalyze-colors.mjs",
     "serve": "node scripts/serve.mjs"
   },
   "dependencies": {

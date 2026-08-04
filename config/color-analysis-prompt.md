@@ -32,6 +32,33 @@ As cores do produto devem ser identificadas SOMENTE em componentes do proprio ca
 
 Nunca utilize cores presentes na caixa, embalagem ou fundo para descrever o produto.
 
+Use apenas estas cores canonicas no campo "colors":
+
+- preto
+- branco
+- cinza
+- azul
+- vermelho
+- rosa
+- laranja
+- verde
+- amarelo
+- bege
+- marrom
+- lilas
+- roxo
+
+Se perceber uma variacao, converta para a cor canonica mais proxima.
+Exemplos:
+
+- grafite, chumbo ou prata -> cinza
+- off white, creme muito claro -> branco ou bege, conforme visivel no calcado
+- vinho ou bordo -> vermelho
+- pink -> rosa
+- salmao ou coral -> laranja
+
+Retorne no maximo 3 cores. Priorize primeiro a cor dominante do calcado, depois detalhes importantes como logotipo, cadarco, sola ou entressola.
+
 Exemplo:
 
 Imagem:
@@ -102,6 +129,8 @@ Nenhuma caracteristica da caixa pode ser transferida para a descricao do calcado
 Se nao for possivel determinar uma caracteristica olhando apenas para o calcado, informe que ela nao pode ser identificada.
 
 Nunca faca suposicoes baseadas na embalagem ou no ambiente.
+
+Se uma cor aparece claramente na caixa ou no fundo, mas nao aparece fisicamente no calcado, ela deve ficar fora do JSON.
 
 ## Formato de resposta
 

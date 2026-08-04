@@ -8,6 +8,7 @@ const colorWords = [
   "azul",
   "vermelho",
   "rosa",
+  "laranja",
   "verde",
   "amarelo",
   "bege",
