@@ -171,7 +171,7 @@
           "parameters": [
             {
               "name": "number",
-              "value": "={{ $json.number }}"
+              "value": "={{ $('Preparar resposta').first().json.number }}"
             },
             {
               "name": "text",
@@ -223,11 +223,11 @@
             },
             {
               "name": "media",
-              "value": "={{ $json.image }}"
+              "value": "={{ $('Preparar resposta').first().json.image }}"
             },
             {
               "name": "caption",
-              "value": "={{ $json.code ? 'Foto do COD ' + $json.code : 'Foto do produto' }}"
+              "value": "={{ $('Preparar resposta').first().json.code ? 'Foto do COD ' + $('Preparar resposta').first().json.code : 'Foto do produto' }}"
             }
           ]
         },
@@ -334,7 +334,13 @@
             "node": "Enviar texto Evolution",
             "type": "main",
             "index": 0
-          },
+          }
+        ]
+      ]
+    },
+    "Enviar texto Evolution": {
+      "main": [
+        [
           {
             "node": "Enviar foto Evolution",
             "type": "main",
@@ -343,7 +349,7 @@
         ]
       ]
     },
-    "Enviar texto Evolution": {
+    "Enviar foto Evolution": {
       "main": [
         [
           {
