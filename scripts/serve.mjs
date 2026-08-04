@@ -9,6 +9,7 @@ const publicDir = path.join(rootDir, "public");
 const dataDir = path.join(rootDir, "data");
 const publicationStatePath = path.join(dataDir, "publication-state.json");
 const ordersPath = path.join(dataDir, "orders.json");
+const storeConfigPath = path.join(dataDir, "store-config.json");
 const port = Number(process.env.PORT ?? 4174);
 const adminUser = process.env.ADMIN_USER ?? "";
 const adminPassword = process.env.ADMIN_PASSWORD ?? "";
@@ -38,6 +39,10 @@ const server = http.createServer(async (request, response) => {
       await handleBotOrders(request, response);
       return;
     }
+    if (url.pathname === "/api/bot/store-config") {
+      await handleBotStoreConfig(request, response);
+      return;
+    }
     if (url.pathname === "/publication-state") {
       await handlePublicationState(request, response);
       return;
@@ -48,6 +53,10 @@ const server = http.createServer(async (request, response) => {
     }
     if (url.pathname === "/orders") {
       await handleOrders(request, response);
+      return;
+    }
+    if (url.pathname === "/store-config") {
+      await handleStoreConfig(request, response);
       return;
     }
 
@@ -76,11 +85,12 @@ function resolveRequest(pathname) {
 }
 
 function requiresAuth(pathname, method = "GET") {
-  const protectedPages = new Set(["/review.html", "/orders.html", "/seller.html"]);
+  const protectedPages = new Set(["/review.html", "/orders.html", "/seller.html", "/config.html"]);
   if (protectedPages.has(pathname)) return true;
   if (pathname === "/products" && method !== "GET") return true;
   if (pathname === "/publication-state" && method !== "GET") return true;
   if (pathname === "/orders" && method !== "POST") return true;
+  if (pathname === "/store-config") return true;
   return false;
 }
 
@@ -192,6 +202,21 @@ async function handleBotOrders(request, response) {
   writeJson(response, { order, reply: `Pedido registrado: COD ${order.code}, tamanho ${order.size}.` });
 }
 
+async function handleBotStoreConfig(request, response) {
+  if (request.method !== "GET") {
+    response.writeHead(405, { "Content-Type": "application/json; charset=utf-8" });
+    response.end(JSON.stringify({ error: "Metodo nao permitido" }));
+    return;
+  }
+
+  writeJson(response, {
+    sucesso: true,
+    dados: await readStoreConfig(),
+    mensagem_interna: "Configuracoes comerciais carregadas.",
+    erro: null,
+  });
+}
+
 async function handleProducts(request, response) {
   const productsPath = path.join(dataDir, "products.json");
 
@@ -282,6 +307,24 @@ async function handleOrders(request, response) {
   response.end("Metodo nao permitido");
 }
 
+async function handleStoreConfig(request, response) {
+  if (request.method === "GET") {
+    writeJson(response, await readStoreConfig());
+    return;
+  }
+
+  if (request.method === "POST" || request.method === "PUT") {
+    const body = await readRequestBody(request);
+    const config = normalizeStoreConfig(JSON.parse(body || "{}"));
+    await saveStoreConfig(config);
+    writeJson(response, await readStoreConfig());
+    return;
+  }
+
+  response.writeHead(405, { "Content-Type": "text/plain; charset=utf-8" });
+  response.end("Metodo nao permitido");
+}
+
 async function readPublicationState() {
   try {
     return normalizePublicationState(JSON.parse(await fs.readFile(publicationStatePath, "utf8")));
@@ -302,6 +345,57 @@ async function readOrders() {
 async function saveOrders(orders) {
   await fs.mkdir(dataDir, { recursive: true });
   await fs.writeFile(ordersPath, JSON.stringify(orders, null, 2), "utf8");
+}
+
+async function readStoreConfig() {
+  try {
+    return normalizeStoreConfig(JSON.parse(await fs.readFile(storeConfigPath, "utf8")));
+  } catch {
+    return normalizeStoreConfig({});
+  }
+}
+
+async function saveStoreConfig(config) {
+  await fs.mkdir(dataDir, { recursive: true });
+  await fs.writeFile(storeConfigPath, JSON.stringify(normalizeStoreConfig(config), null, 2), "utf8");
+}
+
+function normalizeStoreConfig(config) {
+  const discountType = ["fixed", "percent"].includes(text(config.discount?.type)) ? text(config.discount.type) : "fixed";
+
+  return {
+    pix: {
+      enabled: boolean(config.pix?.enabled, true),
+      key: text(config.pix?.key),
+      receiverName: text(config.pix?.receiverName),
+      instructions: text(config.pix?.instructions) || "Apos o Pix, envie o comprovante por aqui.",
+    },
+    pickup: {
+      enabled: boolean(config.pickup?.enabled, true),
+      address: text(config.pickup?.address),
+      hours: text(config.pickup?.hours),
+      instructions: text(config.pickup?.instructions) || "Retirada mediante confirmacao do pedido.",
+    },
+    humanSupport: {
+      enabled: boolean(config.humanSupport?.enabled, true),
+      phone: digits(config.humanSupport?.phone) || "5591981819924",
+      instructions: text(config.humanSupport?.instructions) || "Vou encaminhar sua conversa para o atendimento conferir isso com voce.",
+    },
+    discount: {
+      enabled: boolean(config.discount?.enabled, false),
+      type: discountType,
+      maxFixedCents: Math.max(0, Number(config.discount?.maxFixedCents ?? 0) || 0),
+      maxPercent: Math.min(100, Math.max(0, Number(config.discount?.maxPercent ?? 0) || 0)),
+      triggerOnlyOnObjection: boolean(config.discount?.triggerOnlyOnObjection, true),
+      instructions: text(config.discount?.instructions) || "Desconto permitido somente quando o cliente negociar.",
+    },
+    reservation: {
+      enabled: boolean(config.reservation?.enabled, true),
+      durationMinutes: Math.max(5, Number(config.reservation?.durationMinutes ?? 60) || 60),
+      instructions: text(config.reservation?.instructions) || "Reserva criada apos confirmacao clara do cliente.",
+    },
+    updatedAt: text(config.updatedAt) || new Date().toISOString(),
+  };
 }
 
 function normalizeOrder(order) {
@@ -464,6 +558,17 @@ function buildWhatsappText(product, order) {
 
 function text(value) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function digits(value) {
+  return String(value ?? "").replace(/\D+/g, "");
+}
+
+function boolean(value, fallback = false) {
+  if (typeof value === "boolean") return value;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return fallback;
 }
 
 function normalizePublicationState(state) {

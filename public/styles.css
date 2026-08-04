@@ -752,6 +752,67 @@ main {
   font-weight: 700;
 }
 
+.config-form {
+  display: grid;
+  max-width: 980px;
+  gap: 16px;
+}
+
+.config-section {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #dbe3e8;
+  border-radius: 8px;
+  background: #fff;
+  padding: 16px;
+}
+
+.config-section h2 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+
+.config-section p {
+  margin: 0;
+  color: #59646c;
+}
+
+.config-section label {
+  display: grid;
+  gap: 6px;
+  color: #34414a;
+  font-weight: 700;
+}
+
+.config-section label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-section textarea {
+  min-height: 78px;
+  resize: vertical;
+}
+
+.config-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.config-actions button {
+  border-color: #0f766e;
+  background: #0f766e;
+  color: #fff;
+  font-weight: 700;
+}
+
+#config-status {
+  color: #166534;
+  font-weight: 700;
+}
+
 @media (max-width: 760px) {
   .topbar {
     align-items: stretch;

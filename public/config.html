@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Configuracoes da Loja</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Configuracoes</h1>
+        <p id="config-summary">Carregando configuracoes...</p>
+      </div>
+      <div class="filters">
+        <a class="nav-link" href="/">Catalogo</a>
+        <a class="nav-link" href="/review.html">Revisao</a>
+        <a class="nav-link" href="/orders.html">Pedidos</a>
+        <a class="nav-link" href="/seller.html">Vendedor robo</a>
+      </div>
+    </header>
+
+    <main>
+      <form id="store-config-form" class="config-form">
+        <section class="config-section">
+          <div>
+            <h2>Pix</h2>
+            <p>Dados que o robo usa quando o cliente escolher pagamento via Pix.</p>
+          </div>
+          <label><input id="pix-enabled" type="checkbox" /> Pix ativo</label>
+          <label>Chave Pix<input id="pix-key" type="text" autocomplete="off" /></label>
+          <label>Nome do recebedor<input id="pix-receiver" type="text" /></label>
+          <label>Instrucao ao cliente<textarea id="pix-instructions" rows="3"></textarea></label>
+        </section>
+
+        <section class="config-section">
+          <div>
+            <h2>Retirada</h2>
+            <p>Por enquanto o sistema trabalha apenas com retirada.</p>
+          </div>
+          <label><input id="pickup-enabled" type="checkbox" /> Retirada ativa</label>
+          <label>Endereco de retirada<textarea id="pickup-address" rows="3"></textarea></label>
+          <label>Horario de retirada<input id="pickup-hours" type="text" /></label>
+          <label>Instrucao de retirada<textarea id="pickup-instructions" rows="3"></textarea></label>
+        </section>
+
+        <section class="config-section">
+          <div>
+            <h2>Atendimento humano</h2>
+            <p>Usado quando o robo precisar transferir a conversa.</p>
+          </div>
+          <label><input id="support-enabled" type="checkbox" /> Transferencia ativa</label>
+          <label>WhatsApp do atendimento<input id="support-phone" type="tel" /></label>
+          <label>Mensagem de transferencia<textarea id="support-instructions" rows="3"></textarea></label>
+        </section>
+
+        <section class="config-section">
+          <div>
+            <h2>Desconto</h2>
+            <p>Regra que o robo pode usar somente quando o cliente negociar.</p>
+          </div>
+          <label><input id="discount-enabled" type="checkbox" /> Desconto ativo</label>
+          <label>Tipo
+            <select id="discount-type">
+              <option value="fixed">Valor fixo</option>
+              <option value="percent">Percentual</option>
+            </select>
+          </label>
+          <label>Desconto fixo maximo (R$)<input id="discount-fixed" type="number" min="0" step="0.01" /></label>
+          <label>Desconto percentual maximo (%)<input id="discount-percent" type="number" min="0" max="100" step="1" /></label>
+          <label><input id="discount-objection" type="checkbox" /> Usar somente quando o cliente barganhar</label>
+          <label>Instrucao interna<textarea id="discount-instructions" rows="3"></textarea></label>
+        </section>
+
+        <section class="config-section">
+          <div>
+            <h2>Reserva</h2>
+            <p>Define se o robo pode reservar apos confirmacao clara.</p>
+          </div>
+          <label><input id="reservation-enabled" type="checkbox" /> Reserva ativa</label>
+          <label>Tempo da reserva (minutos)<input id="reservation-minutes" type="number" min="5" step="5" /></label>
+          <label>Instrucao interna<textarea id="reservation-instructions" rows="3"></textarea></label>
+        </section>
+
+        <div class="config-actions">
+          <button id="save-config" type="submit">Salvar configuracoes</button>
+          <span id="config-status" role="status"></span>
+        </div>
+      </form>
+    </main>
+
+    <script src="/config.js"></script>
+  </body>
+</html>
