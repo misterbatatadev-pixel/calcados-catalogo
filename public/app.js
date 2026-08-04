@@ -1,6 +1,22 @@
 let products = [];
 let publicationState = { approved: {} };
 
+const catalogColors = new Set([
+  "preto",
+  "branco",
+  "cinza",
+  "azul",
+  "vermelho",
+  "rosa",
+  "laranja",
+  "verde",
+  "amarelo",
+  "bege",
+  "marrom",
+  "lilas",
+  "roxo",
+]);
+
 const grid = document.querySelector("#grid");
 const summary = document.querySelector("#summary");
 const searchInput = document.querySelector("#search");
@@ -49,7 +65,7 @@ function fillFilters() {
 
   for (const product of products) {
     for (const item of product.sizes ?? []) sizes.add(item.size);
-    for (const color of product.colors ?? []) colors.add(color);
+    for (const color of cleanColors(product.colors)) colors.add(color);
   }
 
   for (const size of [...sizes].sort((a, b) => Number(a) - Number(b))) {
@@ -84,7 +100,7 @@ function render() {
 
     if (query && !haystack.includes(query)) return false;
     if (size && !(product.sizes ?? []).some((item) => item.size === size && item.quantity > 0)) return false;
-    if (color && !(product.colors ?? []).includes(color)) return false;
+    if (color && !cleanColors(product.colors).includes(color)) return false;
     return true;
   });
 
@@ -112,11 +128,11 @@ function cardTemplate(product) {
       `;
     })
     .join("");
-  const colors = (product.colors ?? [])
+  const displayColors = cleanColors(product.colors);
+  const colors = displayColors
     .map((color) => `<span class="color-chip">${escapeHtml(color)}</span>`)
     .join("");
-  const description = product.visualDescription ?? product.colorDescription ?? "";
-  const brand = product.apparentBrand ? `<span class="color-chip">${escapeHtml(product.apparentBrand)}</span>` : "";
+  const description = catalogDescription(product, displayColors);
   const message = encodeURIComponent(
     `Ola, quero este calcado COD ${product.code ?? product.id}, preco ${product.priceText ?? ""}. Pode me ajudar a escolher o tamanho?`
   );
@@ -136,7 +152,7 @@ function cardTemplate(product) {
         </section>
         <section class="product-section">
           <h2>Cores do calcado</h2>
-          <div class="chips">${colors}${brand}</div>
+          <div class="chips">${colors}</div>
         </section>
         <div class="actions">
           <a href="https://wa.me/?text=${message}" target="_blank" rel="noreferrer">Tirar duvida no WhatsApp</a>
@@ -144,6 +160,26 @@ function cardTemplate(product) {
       </div>
     </article>
   `;
+}
+
+function cleanColors(colors) {
+  return [...new Set((colors ?? [])
+    .map((color) => String(color).trim().toLowerCase())
+    .filter((color) => catalogColors.has(color)))]
+    .slice(0, 3);
+}
+
+function catalogDescription(product, colors = cleanColors(product.colors)) {
+  const keywords = (product.searchKeywords ?? []).map((keyword) => String(keyword).toLowerCase());
+  const style = keywords.some((keyword) => keyword.includes("casual"))
+    ? "casual"
+    : keywords.some((keyword) => keyword.includes("corrida") || keyword.includes("esportivo"))
+      ? "esportivo"
+      : "esportivo";
+  const colorText = colors.slice(0, 2).join(" e ");
+  const base = colorText ? `Tenis ${style} ${colorText}` : `Tenis ${style}`;
+  const sole = colors.includes("branco") && !colorText.includes("branco") ? " com solado branco" : "";
+  return `${base}${sole}.`;
 }
 
 function handleGridClick(event) {
