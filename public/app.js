@@ -71,6 +71,10 @@ function render() {
     const haystack = [
       product.code,
       boxLocation,
+      product.apparentBrand,
+      product.visualDescription,
+      product.colorDescription,
+      ...(product.searchKeywords ?? []),
       ...(product.colors ?? []),
       ...(product.sizes ?? []).map((item) => item.size),
     ]
@@ -111,6 +115,8 @@ function cardTemplate(product) {
   const colors = (product.colors ?? [])
     .map((color) => `<span class="color-chip">${escapeHtml(color)}</span>`)
     .join("");
+  const description = product.visualDescription ?? product.colorDescription ?? "";
+  const brand = product.apparentBrand ? `<span class="color-chip">${escapeHtml(product.apparentBrand)}</span>` : "";
   const message = encodeURIComponent(
     `Ola, quero este calcado COD ${product.code ?? product.id}, preco ${product.priceText ?? ""}. Pode me ajudar a escolher o tamanho?`
   );
@@ -123,13 +129,14 @@ function cardTemplate(product) {
           <span class="code">COD ${escapeHtml(product.code ?? product.id)}</span>
           <span class="price">${escapeHtml(product.priceText ?? "")}</span>
         </div>
+        ${description ? `<p class="product-description">${escapeHtml(description)}</p>` : ""}
         <section class="product-section">
           <h2>Comprar por tamanho</h2>
           <div class="sizes">${sizes}</div>
         </section>
         <section class="product-section">
           <h2>Cores do calcado</h2>
-          <div class="chips">${colors}</div>
+          <div class="chips">${colors}${brand}</div>
         </section>
         <div class="actions">
           <a href="https://wa.me/?text=${message}" target="_blank" rel="noreferrer">Tirar duvida no WhatsApp</a>

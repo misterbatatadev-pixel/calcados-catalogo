@@ -118,6 +118,13 @@ main {
   color: #047857;
 }
 
+.product-description {
+  margin: 8px 0 0;
+  color: #34414a;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
 .box-location {
   display: inline-flex;
   margin-top: 8px;

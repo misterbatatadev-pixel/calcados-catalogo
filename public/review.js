@@ -140,7 +140,9 @@ function reviewTemplate(review) {
         <p>Caixa/estoque: ${escapeHtml(boxLocation ?? "pendente")}</p>
         <p>Tamanhos: ${escapeHtml(sizes || "pendente")}</p>
         <p>Cores: ${escapeHtml(colors || "pendente")} (${escapeHtml(product.colorSource ?? "sem fonte")})</p>
-        ${product.colorDescription ? `<p>${escapeHtml(product.colorDescription)}</p>` : ""}
+        ${product.apparentBrand ? `<p>Referencia visual: ${escapeHtml(product.apparentBrand)}</p>` : ""}
+        ${product.visualDescription ? `<p>${escapeHtml(product.visualDescription)}</p>` : product.colorDescription ? `<p>${escapeHtml(product.colorDescription)}</p>` : ""}
+        ${(product.searchKeywords ?? []).length ? `<p>Busca: ${escapeHtml(product.searchKeywords.join(", "))}</p>` : ""}
         <div class="chips">${issueTags}</div>
         <div class="color-edit">
           <input data-colors-for="${escapeHtml(review.key)}" type="text" value="${escapeHtml(colors)}" placeholder="Ex.: preto, rosa, branco" />

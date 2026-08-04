@@ -332,13 +332,33 @@ function normalizeOrder(order) {
 function parseSearchIntent(message, body = {}) {
   const normalized = message.toLowerCase();
   const colorWords = ["preto", "branco", "cinza", "azul", "vermelho", "rosa", "laranja", "verde", "amarelo", "bege", "marrom", "lilas", "roxo"];
+  const brandAliases = new Map([
+    ["nike", "nike"],
+    ["naiki", "nike"],
+    ["adidas", "adidas"],
+    ["adidad", "adidas"],
+    ["adida", "adidas"],
+    ["asics", "asics"],
+    ["asic", "asics"],
+    ["olympikus", "olympikus"],
+    ["olimpikus", "olympikus"],
+    ["mizuno", "mizuno"],
+    ["puma", "puma"],
+    ["fila", "fila"],
+    ["oakley", "oakley"],
+  ]);
   const sizes = [...normalized.matchAll(/\b(3[3-9]|4[0-6])\b/g)].map((match) => match[1]);
   const codeMatch = normalized.match(/(?:cod|codigo|c[oó]digo)\s*[:#-]?\s*(\d+)/) ?? normalized.match(/\b(4\d{3}|5\d{3})\b/);
+  const terms = [];
+  for (const [alias, brand] of brandAliases) {
+    if (normalized.includes(alias)) terms.push(brand);
+  }
 
   return {
     message,
     size: text(body.size) || sizes[0] || "",
     colors: Array.isArray(body.colors) && body.colors.length ? body.colors.map(text).filter(Boolean) : colorWords.filter((color) => normalized.includes(color)),
+    terms: [...new Set(terms)],
     code: text(body.code) || codeMatch?.[1] || "",
   };
 }
@@ -349,6 +369,7 @@ function findProducts(products, intent) {
       if (intent.code && String(product.code ?? product.id) !== intent.code) return false;
       if (intent.size && !(product.sizes ?? []).some((item) => item.size === intent.size && item.quantity > 0)) return false;
       if (intent.colors.length && !intent.colors.some((color) => (product.colors ?? []).includes(color))) return false;
+      if (intent.terms.length && !intent.terms.some((term) => productSearchText(product).includes(term))) return false;
       return true;
     })
     .sort((a, b) => scoreProduct(b, intent) - scoreProduct(a, intent));
@@ -359,7 +380,23 @@ function scoreProduct(product, intent) {
   if (intent.code && String(product.code ?? product.id) === intent.code) score += 4;
   if (intent.size && (product.sizes ?? []).some((item) => item.size === intent.size && item.quantity > 0)) score += 3;
   score += intent.colors.filter((color) => (product.colors ?? []).includes(color)).length * 2;
+  score += intent.terms.filter((term) => productSearchText(product).includes(term)).length * 3;
   return score;
+}
+
+function productSearchText(product) {
+  return [
+    product.apparentBrand,
+    product.visualDescription,
+    product.colorDescription,
+    ...(product.searchKeywords ?? []),
+    ...(product.colors ?? []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
 
 function publicProduct(product) {
@@ -372,6 +409,9 @@ function publicProduct(product) {
     priceText: product.priceText ?? "",
     boxLocation: product.boxLocation ?? product.note ?? "",
     colors: product.colors ?? [],
+    apparentBrand: product.apparentBrand ?? "",
+    visualDescription: product.visualDescription ?? product.colorDescription ?? "",
+    searchKeywords: product.searchKeywords ?? [],
     sizes: product.sizes ?? [],
     imageUrl: product.localImage ? `/images/${path.basename(product.localImage)}` : "",
     absoluteImageUrl: catalogImageUrl,
@@ -391,7 +431,9 @@ function buildSearchReply(intent, matches) {
 
   const first = matches[0];
   const sizes = (first.sizes ?? []).filter((item) => item.quantity > 0).map((item) => item.size).join(", ");
-  return `Encontrei ${matches.length} opcao(oes). Primeira opcao: COD ${first.code ?? first.id}, ${first.priceText ?? ""}. Tamanhos disponiveis: ${sizes}.`;
+  const description = first.visualDescription ? ` ${first.visualDescription}` : "";
+  const brand = first.apparentBrand ? ` Referencia visual: ${first.apparentBrand}.` : "";
+  return `Encontrei ${matches.length} opcao(oes). Primeira opcao: COD ${first.code ?? first.id}, ${first.priceText ?? ""}.${brand}${description} Tamanhos disponiveis: ${sizes}.`;
 }
 
 function buildWhatsappText(product, order) {

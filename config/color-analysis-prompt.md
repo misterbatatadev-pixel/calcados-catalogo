@@ -139,5 +139,19 @@ Responda apenas com JSON valido:
 {
   "colors": ["cor principal", "cor secundaria"],
   "description": "descricao curta baseada somente no calcado",
+  "apparentBrand": "marca ou logotipo aparente visivel no calcado, ou vazio",
+  "keywords": ["palavra-chave curta"],
   "confidence": "alta | media | baixa"
 }
+
+No campo "apparentBrand", use somente informacao visual do proprio calcado, como logotipo ou texto impresso no tenis. Nao use a caixa para identificar marca.
+
+No campo "keywords", inclua termos uteis para busca e conversa com cliente, como:
+
+- marca aparente visivel no calcado
+- estilo do calcado
+- tipo do calcado
+- cores principais
+- detalhes visiveis
+
+Exemplos de keywords: "nike", "adidas", "asics", "tenis esportivo", "corrida", "casual", "solado branco", "logotipo branco".

@@ -17,6 +17,22 @@ const colorWords = [
   "roxo",
 ];
 
+const brandAliases = new Map([
+  ["nike", "nike"],
+  ["naiki", "nike"],
+  ["adidas", "adidas"],
+  ["adidad", "adidas"],
+  ["adida", "adidas"],
+  ["asics", "asics"],
+  ["asic", "asics"],
+  ["olympikus", "olympikus"],
+  ["olimpikus", "olympikus"],
+  ["mizuno", "mizuno"],
+  ["puma", "puma"],
+  ["fila", "fila"],
+  ["oakley", "oakley"],
+]);
+
 const summary = document.querySelector("#seller-summary");
 const chatLog = document.querySelector("#chat-log");
 const chatForm = document.querySelector("#chat-form");
@@ -95,15 +111,23 @@ function handleChatSubmit(event) {
 }
 
 function parseIntent(text) {
-  const normalized = text.toLowerCase();
+  const normalized = text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
   const sizes = [...normalized.matchAll(/\b(3[3-9]|4[0-6])\b/g)].map((match) => match[1]);
   const colors = colorWords.filter((color) => normalized.includes(color));
-  const codeMatch = normalized.match(/(?:cod|codigo|c[oó]digo)\s*[:#-]?\s*(\d+)/) ?? normalized.match(/\b(4\d{3}|5\d{3})\b/);
+  const codeMatch = normalized.match(/(?:cod|codigo)\s*[:#-]?\s*(\d+)/) ?? normalized.match(/\b(4\d{3}|5\d{3})\b/);
+  const terms = [];
+  for (const [alias, brand] of brandAliases) {
+    if (normalized.includes(alias)) terms.push(brand);
+  }
 
   return {
     raw: text,
     size: sizes[0] ?? "",
     colors,
+    terms: [...new Set(terms)],
     code: codeMatch?.[1] ?? "",
   };
 }
@@ -114,6 +138,7 @@ function findProducts(intent) {
       if (intent.code && String(product.code ?? product.id) !== intent.code) return false;
       if (intent.size && !(product.sizes ?? []).some((item) => item.size === intent.size && item.quantity > 0)) return false;
       if (intent.colors.length && !intent.colors.some((color) => (product.colors ?? []).includes(color))) return false;
+      if (intent.terms.length && !intent.terms.some((term) => productSearchText(product).includes(term))) return false;
       return true;
     })
     .sort((a, b) => scoreProduct(b, intent) - scoreProduct(a, intent));
@@ -124,13 +149,30 @@ function scoreProduct(product, intent) {
   if (intent.code && String(product.code ?? product.id) === intent.code) score += 4;
   if (intent.size && (product.sizes ?? []).some((item) => item.size === intent.size && item.quantity > 0)) score += 3;
   score += intent.colors.filter((color) => (product.colors ?? []).includes(color)).length * 2;
+  score += intent.terms.filter((term) => productSearchText(product).includes(term)).length * 3;
   return score;
+}
+
+function productSearchText(product) {
+  return [
+    product.apparentBrand,
+    product.visualDescription,
+    product.colorDescription,
+    ...(product.searchKeywords ?? []),
+    ...(product.colors ?? []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
 
 function responseForIntent(intent, count) {
   const details = [
     intent.size ? `tamanho ${intent.size}` : "",
     intent.colors.length ? intent.colors.join(", ") : "",
+    intent.terms.length ? intent.terms.join(", ") : "",
     intent.code ? `COD ${intent.code}` : "",
   ].filter(Boolean);
 
@@ -151,6 +193,7 @@ function productCard(product, intent) {
   const sizes = (intent.size ? availableSizes.filter((item) => item.size === intent.size) : availableSizes).slice(0, 6);
   const colors = (product.colors ?? []).map((color) => `<span class="color-chip">${escapeHtml(color)}</span>`).join("");
   const image = product.localImage ? `<img src="/${escapeHtml(product.localImage)}" alt="Produto COD ${escapeHtml(product.code ?? product.id)}">` : "";
+  const description = product.visualDescription ?? product.colorDescription ?? "";
 
   return `
     <article class="seller-product">
@@ -160,6 +203,7 @@ function productCard(product, intent) {
           <strong>COD ${escapeHtml(product.code ?? product.id)}</strong>
           <span class="price">${escapeHtml(product.priceText ?? "")}</span>
         </div>
+        ${description ? `<p class="product-description">${escapeHtml(description)}</p>` : ""}
         <div class="chips">${colors}</div>
         <div class="seller-size-actions">
           ${sizes.map((item) => `<button type="button" data-product-key="${escapeHtml(productKey(product))}" data-size="${escapeHtml(item.size)}">Pedir tam. ${escapeHtml(item.size)}</button>`).join("")}

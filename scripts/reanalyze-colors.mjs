@@ -37,6 +37,9 @@ for (const product of products) {
 
   product.colors = analysis.colors;
   product.colorDescription = analysis.description;
+  product.visualDescription = analysis.description;
+  product.apparentBrand = analysis.apparentBrand;
+  product.searchKeywords = analysis.keywords;
   product.colorConfidence = analysis.confidence;
   product.colorSource = analysis.source;
   changed += 1;

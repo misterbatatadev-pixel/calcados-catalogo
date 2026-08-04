@@ -53,6 +53,8 @@ export async function analyzeColors(imagePath) {
   return {
     colors: await detectColors(imagePath),
     description: "Cores estimadas automaticamente pela imagem; revisar se houver caixa ou fundo chamativo.",
+    apparentBrand: "",
+    keywords: [],
     confidence: "baixa",
     source: "fallback",
   };
@@ -101,6 +103,8 @@ export async function analyzeColorsWithVision(imagePath) {
   return {
     colors: sanitizeColors(parsed.colors),
     description: parsed.description ?? null,
+    apparentBrand: normalizeKeyword(parsed.apparentBrand ?? ""),
+    keywords: sanitizeKeywords(parsed.keywords),
     confidence: ["alta", "media", "baixa"].includes(parsed.confidence) ? parsed.confidence : "media",
     source: "vision-ai",
   };
@@ -110,6 +114,8 @@ export function emptyColorAnalysis() {
   return {
     colors: [],
     description: null,
+    apparentBrand: "",
+    keywords: [],
     confidence: "baixa",
     source: "none",
   };
@@ -122,6 +128,15 @@ export function sanitizeColors(colors) {
     .map((color) => normalizeColorName(color))
     .filter((color) => color && allowedColors.has(color)))]
     .slice(0, 4);
+}
+
+export function sanitizeKeywords(keywords) {
+  if (!Array.isArray(keywords)) return [];
+
+  return [...new Set(keywords
+    .map((keyword) => normalizeKeyword(keyword))
+    .filter(Boolean))]
+    .slice(0, 12);
 }
 
 export async function detectColors(imagePath) {
@@ -201,6 +216,17 @@ function normalizeColorName(value) {
     .replace(/\s+/g, " ");
 
   return colorAliases.get(color) ?? color;
+}
+
+function normalizeKeyword(value) {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s/-]+/g, "")
+    .replace(/\s+/g, " ")
+    .slice(0, 60);
 }
 
 function isLowInformationBackground(r, g, b) {
