@@ -146,13 +146,27 @@ Responda apenas com JSON valido:
 
 No campo "apparentBrand", use somente informacao visual do proprio calcado, como logotipo ou texto impresso no tenis. Nao use a caixa para identificar marca.
 
-No campo "description", escreva uma frase curta de vitrine, com no maximo 90 caracteres. Evite listar muitos detalhes. Prefira algo como:
+No campo "description", escreva uma frase de vitrine com tom vendedor, baseada somente no calcado, citando exatamente 3 caracteristicas visiveis.
 
-- "Tenis preto esportivo com solado branco"
-- "Tenis cinza com detalhe amarelo e solado branco"
-- "Tenis azul esportivo com detalhes laranja"
+Regras obrigatorias para "description":
 
-Nao escreva frases longas com muitas virgulas. Nao mencione caixa, embalagem, piso, pessoa ou fundo.
+- Comece a frase com letra maiuscula.
+- Use acentuacao correta em portugues do Brasil.
+- Nao use reticencias.
+- Nao termine com "...".
+- Nao escreva tudo em minusculo.
+- Nao use frase longa demais.
+- Nao mencione caixa, embalagem, piso, pessoa ou fundo.
+- Nao prometa autenticidade da marca.
+- Se citar marca, use apenas quando o logotipo ou texto aparecer no proprio calcado.
+
+Prefira descricoes com este estilo:
+
+- "Tênis esportivo com mesh preto, solado macio e logotipo branco."
+- "Tênis cinza com detalhe amarelo, cabedal respirável e solado branco."
+- "Tênis azul esportivo com detalhes laranja, cadarço firme e visual moderno."
+
+Evite listar muitas caracteristicas tecnicas. A descricao deve ajudar o cliente a sentir vontade de comprar.
 
 No campo "keywords", inclua termos uteis para busca e conversa com cliente, como:
 

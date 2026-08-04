@@ -111,15 +111,28 @@ export async function analyzeColorsWithVision(imagePath) {
 }
 
 export function sanitizeDescription(description) {
-  const text = String(description ?? "")
+  let text = String(description ?? "")
     .replace(/\s+/g, " ")
+    .replace(/\.\.\.+$/g, "")
     .trim();
 
   if (!text) return null;
-  if (text.length <= 100) return text;
 
-  const short = text.slice(0, 97).replace(/[,;:]\s*[^,;:]*$/, "").trim();
-  return `${short || text.slice(0, 97).trim()}...`;
+  text = text
+    .replace(/^tenis\b/i, "Tênis")
+    .replace(/\bcalcado\b/gi, "calçado")
+    .replace(/\blogo\b/gi, "logotipo")
+    .replace(/\bmoderno\b/gi, "moderno");
+
+  text = `${text.charAt(0).toLocaleUpperCase("pt-BR")}${text.slice(1)}`;
+  text = text.replace(/[.!?]+$/g, "");
+
+  if (text.length > 150) {
+    const short = text.slice(0, 145).replace(/[,;:]\s*[^,;:]*$/, "").trim();
+    text = short || text.slice(0, 145).trim();
+  }
+
+  return `${text}.`;
 }
 
 export function emptyColorAnalysis() {

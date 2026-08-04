@@ -170,16 +170,44 @@ function cleanColors(colors) {
 }
 
 function catalogDescription(product, colors = cleanColors(product.colors)) {
+  const aiDescription = polishDescription(product.visualDescription ?? product.colorDescription);
+  if (aiDescription) return aiDescription;
+
   const keywords = (product.searchKeywords ?? []).map((keyword) => String(keyword).toLowerCase());
   const style = keywords.some((keyword) => keyword.includes("casual"))
     ? "casual"
     : keywords.some((keyword) => keyword.includes("corrida") || keyword.includes("esportivo"))
       ? "esportivo"
       : "esportivo";
-  const colorText = colors.slice(0, 2).join(" e ");
-  const base = colorText ? `Tenis ${style} ${colorText}` : `Tenis ${style}`;
-  const sole = colors.includes("branco") && !colorText.includes("branco") ? " com solado branco" : "";
-  return `${base}${sole}.`;
+  const primaryColor = colors[0] ?? "";
+  const secondColor = colors[1] ?? "";
+  const colorText = primaryColor ? ` ${primaryColor}` : "";
+  const detail = secondColor ? `, detalhes em ${secondColor}` : ", visual versátil";
+  return `Tênis ${style}${colorText}${detail} e acabamento confortável.`;
+}
+
+function polishDescription(description) {
+  let text = String(description ?? "")
+    .replace(/\s+/g, " ")
+    .replace(/\.\.\.+$/g, "")
+    .trim();
+
+  if (!text) return "";
+
+  text = text
+    .replace(/^tenis\b/i, "Tênis")
+    .replace(/\bcalcado\b/gi, "calçado")
+    .replace(/\blogo\b/gi, "logotipo");
+
+  text = `${text.charAt(0).toLocaleUpperCase("pt-BR")}${text.slice(1)}`;
+  text = text.replace(/[.!?]+$/g, "");
+
+  if (text.length > 150) {
+    const short = text.slice(0, 145).replace(/[,;:]\s*[^,;:]*$/, "").trim();
+    text = short || text.slice(0, 145).trim();
+  }
+
+  return `${text}.`;
 }
 
 function handleGridClick(event) {
