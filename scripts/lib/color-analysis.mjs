@@ -102,12 +102,24 @@ export async function analyzeColorsWithVision(imagePath) {
 
   return {
     colors: sanitizeColors(parsed.colors),
-    description: parsed.description ?? null,
+    description: sanitizeDescription(parsed.description),
     apparentBrand: normalizeKeyword(parsed.apparentBrand ?? ""),
     keywords: sanitizeKeywords(parsed.keywords),
     confidence: ["alta", "media", "baixa"].includes(parsed.confidence) ? parsed.confidence : "media",
     source: "vision-ai",
   };
+}
+
+export function sanitizeDescription(description) {
+  const text = String(description ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!text) return null;
+  if (text.length <= 100) return text;
+
+  const short = text.slice(0, 97).replace(/[,;:]\s*[^,;:]*$/, "").trim();
+  return `${short || text.slice(0, 97).trim()}...`;
 }
 
 export function emptyColorAnalysis() {

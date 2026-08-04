@@ -431,9 +431,17 @@ function buildSearchReply(intent, matches) {
 
   const first = matches[0];
   const sizes = (first.sizes ?? []).filter((item) => item.quantity > 0).map((item) => item.size).join(", ");
-  const description = first.visualDescription ? ` ${first.visualDescription}` : "";
-  const brand = first.apparentBrand ? ` Referencia visual: ${first.apparentBrand}.` : "";
-  return `Encontrei ${matches.length} opcao(oes). Primeira opcao: COD ${first.code ?? first.id}, ${first.priceText ?? ""}.${brand}${description} Tamanhos disponiveis: ${sizes}.`;
+  const lines = [
+    `Encontrei ${matches.length} opcao(oes).`,
+    "",
+    `COD ${first.code ?? first.id} - ${first.priceText ?? ""}`,
+  ];
+
+  if (first.apparentBrand) lines.push(`Referencia visual: ${first.apparentBrand}`);
+  if (first.visualDescription) lines.push(first.visualDescription);
+  lines.push(`Tamanhos disponiveis: ${sizes}`);
+
+  return lines.join("\n");
 }
 
 function buildWhatsappText(product, order) {

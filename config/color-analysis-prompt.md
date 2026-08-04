@@ -146,6 +146,14 @@ Responda apenas com JSON valido:
 
 No campo "apparentBrand", use somente informacao visual do proprio calcado, como logotipo ou texto impresso no tenis. Nao use a caixa para identificar marca.
 
+No campo "description", escreva uma frase curta de vitrine, com no maximo 90 caracteres. Evite listar muitos detalhes. Prefira algo como:
+
+- "Tenis preto esportivo com solado branco"
+- "Tenis cinza com detalhe amarelo e solado branco"
+- "Tenis azul esportivo com detalhes laranja"
+
+Nao escreva frases longas com muitas virgulas. Nao mencione caixa, embalagem, piso, pessoa ou fundo.
+
 No campo "keywords", inclua termos uteis para busca e conversa com cliente, como:
 
 - marca aparente visivel no calcado
